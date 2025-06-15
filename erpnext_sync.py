@@ -1,4 +1,3 @@
-
 import local_config as config
 import requests
 import datetime
@@ -128,7 +127,8 @@ def pull_process_and_push_data(device, device_attendance_logs=None):
                 punch_direction = 'IN'
             else:
                 punch_direction = None
-        erpnext_status_code, erpnext_message = send_to_erpnext(device_attendance_log['user_id'], device_attendance_log['timestamp'], device['device_id'], punch_direction, latitude=device['latitude'], longitude=device['longitude'])
+        erpnext_status_code, erpnext_message = send_to_erpnext(device_attendance_log['user_id'], device_attendance_log['timestamp'], device['device_id'], punch_direction, latitude=device.get('latitude'), 
+    longitude=device.get('longitude'))
         if erpnext_status_code == 200:
             attendance_success_logger.info("\t".join([erpnext_message, str(device_attendance_log['uid']),
                 str(device_attendance_log['user_id']), str(device_attendance_log['timestamp'].timestamp()),
@@ -143,7 +143,7 @@ def pull_process_and_push_data(device, device_attendance_logs=None):
                 raise Exception('API Call to ERPNext Failed.')
 
 
-def get_all_attendance_from_device(ip, port=4370, timeout=30, device_id=None, clear_from_device_on_fetch=False):
+def get_all_attendance_from_device(ip, port=4370, timeout=60, device_id=None, clear_from_device_on_fetch=False):
     #  Sample Attendance Logs [{'punch': 255, 'user_id': '22', 'uid': 12349, 'status': 1, 'timestamp': datetime.datetime(2019, 2, 26, 20, 31, 29)},{'punch': 255, 'user_id': '7', 'uid': 7, 'status': 1, 'timestamp': datetime.datetime(2019, 2, 26, 20, 31, 36)}]
     zk = ZK(ip, port=port, timeout=timeout)
     conn = None

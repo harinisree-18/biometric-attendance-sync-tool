@@ -63,7 +63,6 @@ class BiometricWindow(QMainWindow):
         self.setWindowTitle('ERPNext Biometric Service')
 
     def setup_textboxes_and_label(self):
-
         self.create_label("API Secret", "api_secret", 20, 0, 200, 30)
         self.create_field("textbox_erpnext_api_secret", 20, 30, 200, 30)
 
@@ -114,23 +113,37 @@ class BiometricWindow(QMainWindow):
             self.textbox_erpnext_url.setText(config.ERPNEXT_URL)
             self.textbox_pull_frequency.setText(str(config.PULL_FREQUENCY))
 
-            if len(config.devices):
+            # Check if devices list has items before accessing
+            if len(config.devices) > 0:
                 self.device_id_0.setText(config.devices[0]['device_id'])
                 self.device_ip_0.setText(config.devices[0]['ip'])
-                self.shift_0.setText(
-                    config.shift_type_device_mapping[0]['shift_type_name'])
+                
+                # Check if shift_type_device_mapping has items before accessing
+                if len(config.shift_type_device_mapping) > 0:
+                    shift_name = config.shift_type_device_mapping[0]['shift_type_name']
+                    if isinstance(shift_name, list):
+                        shift_name = ", ".join(str(item) for item in shift_name)
+                    self.shift_0.setText(str(shift_name))
 
+            # Handle multiple devices
             if len(config.devices) > 1:
-                for _ in range(self.counter, len(config.devices) - 1):
-                    self.add_devices_fields()
+                for device_idx in range(1, len(config.devices)):
+                    if device_idx - 1 >= self.counter:
+                        self.add_devices_fields()
 
-                    device = getattr(self, 'device_id_' + str(self.counter))
-                    ip = getattr(self, 'device_ip_' + str(self.counter))
-                    shift = getattr(self, 'shift_' + str(self.counter))
+                    device = getattr(self, 'device_id_' + str(device_idx))
+                    ip = getattr(self, 'device_ip_' + str(device_idx))
+                    shift = getattr(self, 'shift_' + str(device_idx))
 
-                    device.setText(config.devices[self.counter]['device_id'])
-                    ip.setText(config.devices[self.counter]['ip'])
-                    shift.setText(config.shift_type_device_mapping[self.counter]['shift_type_name'])
+                    device.setText(config.devices[device_idx]['device_id'])
+                    ip.setText(config.devices[device_idx]['ip'])
+                    
+                    # Check if shift_type_device_mapping has enough items
+                    if device_idx < len(config.shift_type_device_mapping):
+                        shift_name = config.shift_type_device_mapping[device_idx]['shift_type_name']
+                        if isinstance(shift_name, list):
+                            shift_name = ", ".join(str(item) for item in shift_name)
+                        shift.setText(str(shift_name))
         else:
             self.textbox_erpnext_api_secret.setPlaceholderText("c70ee57c7b3124c")
             self.textbox_erpnext_api_key.setPlaceholderText("fb37y8fd4uh8ac")
@@ -139,9 +152,9 @@ class BiometricWindow(QMainWindow):
 
         self.textbox_import_start_date.setPlaceholderText("DD/MM/YYYY")
 
-    # Widgets Genrators
+    # Widgets Generators
     def create_label(self, label_text, label_name, x, y, height, width):
-        setattr(self,  label_name, QLabel(self))
+        setattr(self, label_name, QLabel(self))
         label = getattr(self, label_name)
         label.move(x, y)
         label.setText(label_text)
@@ -150,7 +163,7 @@ class BiometricWindow(QMainWindow):
         label.show()
 
     def create_field(self, field_name, x, y, height, width):
-        setattr(self,  field_name, QLineEdit(self))
+        setattr(self, field_name, QLineEdit(self))
         field = getattr(self, field_name)
         field.move(x, y)
         field.resize(height, width)
@@ -165,7 +178,7 @@ class BiometricWindow(QMainWindow):
         field.show()
 
     def create_button(self, button_label, button_name, x, y, height, width, callback_function, enable=True):
-        setattr(self,  button_name, QPushButton(button_label, self))
+        setattr(self, button_name, QPushButton(button_label, self))
         button = getattr(self, button_name)
         button.move(x, y)
         button.resize(height, width)
@@ -310,6 +323,7 @@ class BiometricWindow(QMainWindow):
         else:
             create_message_box("Running status", 'Process not yet started')
 
+
 def read_file_contents(file_name, index):
     running_status = []
     with open('/'.join([config.LOGS_DIRECTORY])+f'/{file_name}.log', 'r') as file_handler:
@@ -389,3 +403,4 @@ def setup_window():
 
 if __name__ == "__main__":
     setup_window()
+    
